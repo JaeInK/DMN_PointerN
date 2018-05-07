@@ -62,10 +62,11 @@ def _add_gradient_noise(t, stddev=1e-3, name=None):
         return tf.add(t, gn)
 
 # No need to use poistion_encoding for word_size
+"""
 def _position_encoding(sentence_size, embedding_size):
-    """We could have used RNN for parsing sentence but that tends to overfit.
+    We could have used RNN for parsing sentence but that tends to overfit.
     The simpler choice would be to take sum of embedding but we loose loose positional information.
-    Position encoding is described in section 4.1 in "End to End Memory Networks" in more detail (http://arxiv.org/pdf/1503.08895v5.pdf)"""
+    Position encoding is described in section 4.1 in "End to End Memory Networks" in more detail (http://arxiv.org/pdf/1503.08895v5.pdf)
     encoding = np.ones((embedding_size, sentence_size), dtype=np.float32)
     ls = sentence_size+1
     le = embedding_size+1
@@ -74,6 +75,13 @@ def _position_encoding(sentence_size, embedding_size):
             encoding[i-1, j-1] = (i - (le-1)/2) * (j - (ls-1)/2)
     encoding = 1 + 4 * encoding / embedding_size / sentence_size
     return np.transpose(encoding)
+"""
+
+"""
+def _word_encoding(sentence_size, embedding_size):
+	cell = tf.nn.rnn_cell.GRUCell(n_hidden)
+	outputs, staes = tf.nn.dynamic_rnn(cell, inputs)
+"""	
 
 
 class DMN_PLUS(object):
@@ -148,8 +156,10 @@ class DMN_PLUS(object):
 
         return q_vec
 
+	
+	"""
     def get_input_representation(self):
-        """Get fact (sentence) vectors via embedding, positional encoding and bi-directional GRU"""
+        Get fact (sentence) vectors via embedding, positional encoding and bi-directional GRU
         # get word vectors from embedding
         inputs = tf.nn.embedding_lookup(self.embeddings, self.input_placeholder)
 
@@ -173,9 +183,14 @@ class DMN_PLUS(object):
         fact_vecs = tf.nn.dropout(fact_vecs, self.dropout_placeholder)
 
         return fact_vecs
+"""
+	
+	def get_input_representation(self):
+		inputs = tf.nn.embedding_lookup(self.embeddings, self.input_placeholder)
+
 
     def get_attention(self, q_vec, prev_memory, fact_vec, reuse):
-        """Use question vector and previous memory to create scalar attention for current fact"""
+       """ Use question vector and previous memory to create scalar attention for current fact"""
         with tf.variable_scope("attention", reuse=reuse):
 
             features = [fact_vec*q_vec,
@@ -196,6 +211,7 @@ class DMN_PLUS(object):
                             reuse=reuse, scope="fc2")
 
         return attention
+	
 
     def generate_episode(self, memory, q_vec, fact_vecs, hop_index):
         """Generate episode by applying attention to current fact vectors through a modified GRU"""
